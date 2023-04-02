@@ -13,6 +13,7 @@ public class DataSet {
 	private List<Integer> values = new ArrayList<>();
 	private HashMap<Integer, Integer> countingMap = new HashMap<>();
 
+
 	public int getDie() {
 		return die;
 	}

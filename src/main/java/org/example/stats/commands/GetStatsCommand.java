@@ -1,11 +1,7 @@
 package org.example.stats.commands;
 
 import javafx.application.Platform;
-import javafx.embed.swing.JFXPanel;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.Scene;
-import javafx.scene.SnapshotParameters;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
@@ -16,9 +12,12 @@ import net.dv8tion.jda.api.utils.FileUpload;
 import org.example.commands.TextCommandHandler;
 import org.example.rolling.Tuple;
 import org.example.stats.Channel;
+import org.example.stats.JFXInitialization;
 import org.example.stats.Stats;
 import org.example.stats.User;
+import org.example.stats.chart.ChartConfig;
 import org.example.stats.chart.DataSet;
+import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.io.ByteArrayInputStream;
@@ -29,8 +28,7 @@ import java.util.stream.Collectors;
 
 public class GetStatsCommand implements TextCommandHandler {
 
-	public static final int WIDTH = 1000;
-	public static final int HEIGHT = 1000 * 9 / 16;
+	private static final JFXInitialization JFX_INITIALIZATION = JFXInitialization.get();
 
 	@Override
 	public void accept(MessageReceivedEvent event) {
@@ -38,58 +36,60 @@ public class GetStatsCommand implements TextCommandHandler {
 		Channel channel = Stats.trackedChannels.stream().filter(c -> c.getChannelId() == channelId).findFirst().orElse(null);
 		if (channel == null) return;
 
-		User[] users;
+		Optional<ChartConfig> chartConfig = createChartConfig(event, channel);
+		if (chartConfig.isEmpty()) return;
+
+		List<Tuple<Integer, List<Tuple<Integer, Integer>>>> datasets = generateDataSets(chartConfig.get().users());
+
+		// Run the JavaFX code on the JavaFX application thread
+		Platform.runLater(() -> {
+			final BarChart<String, Number> barChart = createBarChart(chartConfig.get().title());
+			WritableImage graph = drawGraphFromDataSets(datasets, barChart);
+			byte[] outputImage = generateImage(graph);
+			if (outputImage == null) {
+				event.getMessage().reply("Error creating graph...").queue();
+				return;
+			}
+			ByteArrayInputStream graphImageAsFile = new ByteArrayInputStream(outputImage);
+			event.getMessage().reply("Here you go~").addFiles(FileUpload.fromData(graphImageAsFile, "stats.png")).queue();
+		});
+
+	}
+
+	private Optional<ChartConfig> createChartConfig(MessageReceivedEvent event, Channel channel) {
 		final String baseTitle = "Dice Roll Results Visualized";
-		final String title;
 		if (event.getMessage().getContentDisplay().startsWith("!stats --user")) {
 			User user = channel.getUserList().stream().filter(trackedUser -> trackedUser.getUserId() == event.getAuthor().getIdLong()).findFirst().orElse(null);
 			if (user == null) {
 				event.getMessage().reply("No information for this user in this channel!").queue();
-				return;
+				return Optional.empty();
 			}
-			users = new User[]{user};
-			title = baseTitle + " for " + user.getUserName();
+			return Optional.of(new ChartConfig(baseTitle + " for " + user.getUserName(), new User[]{user}));
 		} else {
-			users = channel.getUserList().toArray(new User[0]);
-			title = baseTitle;
+			return Optional.of(new ChartConfig(baseTitle, channel.getUserList().toArray(new User[0])));
 		}
-		// generate dataset for each die value
-		List<Tuple<Integer, List<Tuple<Integer, Integer>>>> datasets = generateDataSets(users);
-		// Construct the chart image
-		// Initialize the JavaFX runtime
-		JFXPanel fxPanel = new JFXPanel();
-		// Run the JavaFX code on the JavaFX application thread
-		Platform.runLater(() -> {
-			final CategoryAxis xAxis = new CategoryAxis();
-			final NumberAxis yAxis = new NumberAxis();
-			final BarChart<String, Number> bc = new BarChart<>(xAxis, yAxis);
-			bc.setTitle(title);
-			xAxis.setLabel("Result");
-			yAxis.setLabel("Amount");
+	}
 
-			Scene scene = new Scene(bc, WIDTH, HEIGHT);
+	private WritableImage drawGraphFromDataSets(List<Tuple<Integer, List<Tuple<Integer, Integer>>>> datasets, BarChart<String, Number> barChart) {
+		for (Tuple<Integer, List<Tuple<Integer, Integer>>> dataset : datasets) {
+			barChart.getData().add(createDataSeries(dataset.getOne(), dataset.getTwo()));
+		}
+		JFX_INITIALIZATION.scene.setRoot(barChart);
+		return barChart.snapshot(JFX_INITIALIZATION.parameters, null);
+	}
 
-			for (Tuple<Integer, List<Tuple<Integer, Integer>>> dataset : datasets) {
-				bc.getData().add(createDataSeries(dataset.getOne(), dataset.getTwo()));
-			}
+	@NotNull
+	private BarChart<String, Number> createBarChart(String title) {
+		final CategoryAxis xAxis = new CategoryAxis();
+		xAxis.setLabel("Result");
 
-			// Take a snapshot of the bar chart and save it as an image
-			SnapshotParameters parameters = new SnapshotParameters();
-			parameters.setViewport(new Rectangle2D(0, 0, WIDTH, HEIGHT));
-			WritableImage image = bc.snapshot(parameters, null);
-			// Save the image to a file or do something else with it
+		final NumberAxis yAxis = new NumberAxis();
+		yAxis.setLabel("Amount");
 
-			// Send the chart image as a regular message
-			byte[] output = generateImage(image);
-			if (output == null) {
-				event.getMessage().reply("Error creating graph...").queue();
-				return;
-			}
-			// Convert the ByteArrayOutputStream to an InputStream
-			ByteArrayInputStream inputStream = new ByteArrayInputStream(output);
-			event.getMessage().reply("Here you go~").addFiles(FileUpload.fromData(inputStream, "stats.png")).queue();
-		});
+		final BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
+		barChart.setTitle(title);
 
+		return barChart;
 	}
 
 	private XYChart.Series<String, Number> createDataSeries(Integer die, List<Tuple<Integer, Integer>> results) {
