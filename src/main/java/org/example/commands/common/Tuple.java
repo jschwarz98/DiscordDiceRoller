@@ -1,4 +1,4 @@
-package org.example.rolling;
+package org.example.commands.common;
 
 public class Tuple<K, V> {
 

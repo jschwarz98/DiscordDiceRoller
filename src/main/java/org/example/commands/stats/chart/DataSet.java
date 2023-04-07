@@ -1,6 +1,6 @@
-package org.example.stats.chart;
+package org.example.commands.stats.chart;
 
-import org.example.rolling.Tuple;
+import org.example.commands.common.Tuple;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,8 +1,7 @@
-package org.example.stats;
+package org.example.commands.common;
 
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
-import org.example.rolling.Tuple;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,9 +16,9 @@ public class Stats {
 		Channel c = trackedChannels.stream().filter(ch -> ch.getChannelId() == channel.getIdLong()).findFirst().orElse(null);
 		if (c == null) return;
 
-		org.example.stats.User user = c.getUserList().stream().filter(u -> u.getUserId() == author.getIdLong()).findFirst().orElse(null);
+		org.example.commands.common.User user = c.getUserList().stream().filter(u -> u.getUserId() == author.getIdLong()).findFirst().orElse(null);
 		if (user == null) {
-			user = new org.example.stats.User(author.getIdLong(), author.getName());
+			user = new org.example.commands.common.User(author.getIdLong(), author.getName());
 			c.getUserList().add(user);
 		}
 

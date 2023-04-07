@@ -1,4 +1,4 @@
-package org.example.stats;
+package org.example.commands.common;
 
 import java.util.HashMap;
 import java.util.List;

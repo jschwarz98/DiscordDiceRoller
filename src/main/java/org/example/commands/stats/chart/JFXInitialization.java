@@ -1,4 +1,4 @@
-package org.example.stats;
+package org.example.commands.stats.chart;
 
 import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;

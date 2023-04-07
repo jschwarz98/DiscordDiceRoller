@@ -1,8 +1,11 @@
-package org.example.rolling;
+package org.example.commands.rolling;
 
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.example.commands.TextCommandHandler;
-import org.example.stats.Stats;
+import org.example.commands.common.Stats;
+import org.example.commands.common.Tuple;
+import org.example.commands.common.messages.AbstractMessageData;
+import org.example.commands.common.messages.ReplyData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -10,31 +13,35 @@ import java.util.List;
 import java.util.Random;
 
 public class RollDiceCommand implements TextCommandHandler {
-	private static final String start = "!roll ";
+	private static final String start = "!roll";
 	private static final Random r = new Random();
 
 	@Override
-	public void accept(MessageReceivedEvent event) {
+	public AbstractMessageData accept(MessageReceivedEvent event) {
 		String content = event.getMessage().getContentDisplay();
 		if (!content.startsWith(start)) {
-			return;
+			return null;
 		}
 
-		String rest = content.substring(start.length());
-		String[] args = rest.split(" ");
+		String rest = content.substring(start.length()).trim();
+		String[] args;
+
+		if (rest.isEmpty()) {
+			args = new String[]{"1w20"};
+		} else {
+			args = rest.split(" ");
+		}
 
 		// 1. needed rolls
-
 		List<Tuple<Integer, Integer>> neededRolls = getRolls(args);
 		// 2. roll them
 		List<Tuple<Integer, List<Integer>>> results = roll(neededRolls);
 		// 3. track them if necessary
 		Stats.track(event.getChannel(), event.getAuthor(), results);
-
 		// 4. return result string
 		String resultString = buildResultString(results);
 
-		event.getMessage().reply(resultString).queue();
+		return new ReplyData(resultString);
 	}
 
 	private List<Tuple<Integer, List<Integer>>> roll(List<Tuple<Integer, Integer>> neededDiceRolls) {
@@ -73,7 +80,7 @@ public class RollDiceCommand implements TextCommandHandler {
 			}
 			resultString.append(System.lineSeparator());
 		});
-		return resultString.isEmpty() ? "I don't understand your command. Please try again!" : resultString.toString();
+		return resultString.isEmpty() ? "I don't understand your command. Please try again!" : resultString.toString().trim();
 	}
 
 	@NotNull

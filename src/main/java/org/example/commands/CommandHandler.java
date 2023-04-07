@@ -1,9 +1,9 @@
 package org.example.commands;
 
-import org.example.rolling.RollDiceCommand;
-import org.example.stats.commands.GetStatsCommand;
-import org.example.stats.commands.StopTrackChannelCommand;
-import org.example.stats.commands.TrackChannelCommand;
+import org.example.commands.rolling.RollDiceCommand;
+import org.example.commands.stats.GetStatsCommand;
+import org.example.commands.stats.StopTrackChannelCommand;
+import org.example.commands.stats.TrackChannelCommand;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
