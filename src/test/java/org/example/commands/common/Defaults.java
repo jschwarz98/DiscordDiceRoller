@@ -16,6 +16,9 @@ public class Defaults {
 		return author;
 	}
 
+	/**
+	 * @return Author name: testUser; id: 123
+	 */
 	public static User createMockAuthor() {
 		return createMockAuthor("testUser", 123L);
 	}

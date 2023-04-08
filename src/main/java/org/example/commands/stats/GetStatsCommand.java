@@ -7,6 +7,7 @@ import org.example.commands.common.Stats;
 import org.example.commands.common.Tuple;
 import org.example.commands.common.User;
 import org.example.commands.common.messages.AbstractMessageData;
+import org.example.commands.common.messages.ReplyData;
 import org.example.commands.stats.chart.ChartConfig;
 import org.example.commands.stats.chart.DataSet;
 import org.example.commands.stats.replyStrategy.GraphVisualization;
@@ -24,8 +25,9 @@ public class GetStatsCommand implements TextCommandHandler {
 		Channel channel = Stats.trackedChannels.stream().filter(c -> c.getChannelId() == channelId).findFirst().orElse(null);
 		if (channel == null) return null;
 
-		Optional<ChartConfig> chartConfig = createChartConfig(event, channel);
-		if (chartConfig.isEmpty()) return null;
+		Optional<ChartConfig> chartConfig = createChartConfig(event.getMessage().getContentDisplay(), event.getAuthor(), channel);
+		if (chartConfig.isEmpty())
+			return new ReplyData("No information for this user in this channel!");
 
 		List<Tuple<Integer, List<Tuple<Integer, Integer>>>> datasets = generateDataSets(chartConfig.get().users());
 
@@ -40,12 +42,11 @@ public class GetStatsCommand implements TextCommandHandler {
 		return new GraphVisualization();
 	}
 
-	protected Optional<ChartConfig> createChartConfig(MessageReceivedEvent event, Channel channel) {
+	protected Optional<ChartConfig> createChartConfig(String msg, net.dv8tion.jda.api.entities.User author, Channel channel) {
 		final String baseTitle = "Dice Roll Results Visualized";
-		if (event.getMessage().getContentDisplay().contains(" --user")) {
-			User user = channel.getUserList().stream().filter(trackedUser -> trackedUser.getUserId() == event.getAuthor().getIdLong()).findFirst().orElse(null);
+		if (msg.contains(" --user")) {
+			User user = channel.getUserList().stream().filter(trackedUser -> trackedUser.getUserId() == author.getIdLong()).findFirst().orElse(null);
 			if (user == null) {
-				event.getMessage().reply("No information for this user in this channel!").queue();
 				return Optional.empty();
 			}
 			return Optional.of(new ChartConfig(baseTitle + " for " + user.getUserName(), new User[]{user}));
