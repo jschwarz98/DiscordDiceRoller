@@ -1,4 +1,4 @@
-package de.schwarz.diceroller.commands.common;
+package de.schwarz.diceroller.common;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Message;

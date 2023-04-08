@@ -1,9 +1,9 @@
 package de.schwarz.diceroller.commands.stats;
 
 import de.schwarz.diceroller.commands.TextCommandHandler;
-import de.schwarz.diceroller.commands.common.Defaults;
 import de.schwarz.diceroller.commands.common.Stats;
 import de.schwarz.diceroller.commands.common.messages.AbstractMessageData;
+import de.schwarz.diceroller.common.Defaults;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;

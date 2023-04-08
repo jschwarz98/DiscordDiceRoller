@@ -1,12 +1,16 @@
 package de.schwarz.diceroller.commands.stats;
 
-import de.schwarz.diceroller.commands.common.*;
+import de.schwarz.diceroller.commands.common.Channel;
+import de.schwarz.diceroller.commands.common.Stats;
+import de.schwarz.diceroller.commands.common.Tuple;
+import de.schwarz.diceroller.commands.common.User;
 import de.schwarz.diceroller.commands.common.messages.AbstractMessageData;
 import de.schwarz.diceroller.commands.common.messages.ReplyData;
 import de.schwarz.diceroller.commands.stats.chart.ChartConfig;
 import de.schwarz.diceroller.commands.stats.replyStrategy.GraphVisualization;
 import de.schwarz.diceroller.commands.stats.replyStrategy.ReplyStrategy;
 import de.schwarz.diceroller.commands.stats.replyStrategy.TextTable;
+import de.schwarz.diceroller.common.Defaults;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
