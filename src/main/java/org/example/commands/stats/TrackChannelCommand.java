@@ -12,12 +12,13 @@ public class TrackChannelCommand implements TextCommandHandler {
 	@Override
 	public AbstractMessageData accept(MessageReceivedEvent event) {
 		long cid = event.getChannel().getIdLong();
+		String usageInfo = "To see the collected information use the following commands: !stats; !stats --user";
 
 		if (Stats.trackedChannels.stream().anyMatch(c -> c.getChannelId() == cid)) {
-			return new ReplyData("This channel is already being tracked! To see the collected information use the following commands: '!stats'; '!stat --user'");
+			return new ReplyData("This channel is already being tracked! " + usageInfo);
 		}
 
 		Stats.trackedChannels.add(new Channel(cid));
-		return new ReplyData("Tracking this channel from now on. To see the collected information use the following commands: '!stats'; '!stat --user'");
+		return new ReplyData("Tracking this channel from now on. " + usageInfo);
 	}
 }
