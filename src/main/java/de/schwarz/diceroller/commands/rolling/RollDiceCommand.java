@@ -1,5 +1,6 @@
 package de.schwarz.diceroller.commands.rolling;
 
+import de.schwarz.diceroller.commands.CommandHandler;
 import de.schwarz.diceroller.commands.TextCommandHandler;
 import de.schwarz.diceroller.commands.common.RollButton;
 import de.schwarz.diceroller.commands.common.Stats;
@@ -25,12 +26,8 @@ public class RollDiceCommand implements TextCommandHandler {
 
 	@Override
 	public AbstractMessageData accept(MessageReceivedEvent event) {
-		String content = event.getMessage().getContentDisplay();
-		if (!content.startsWith(start)) {
-			return null;
-		}
-
-		String rest = content.substring(start.length()).trim();
+		String content = event.getMessage().getContentDisplay().trim();
+		String rest = content.substring(CommandHandler.ROLL_DICE.getPrefix().length()).trim();
 		String[] args;
 
 		if (rest.isEmpty()) {

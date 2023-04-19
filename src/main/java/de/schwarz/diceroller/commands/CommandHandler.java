@@ -33,6 +33,10 @@ public enum CommandHandler {
 				.orElse(null);
 	}
 
+	public String getPrefix() {
+		return prefix;
+	}
+
 	public TextCommandHandler getHandler() {
 		return handler;
 	}
