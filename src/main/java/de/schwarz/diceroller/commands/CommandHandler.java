@@ -25,15 +25,15 @@ public enum CommandHandler {
 	}
 
 	@Nullable
-	public static TextCommandHandler getHandlerFor(String message) {
+	public static TextCommandHandler getHandlerForMessage(String message) {
 		return Arrays.stream(CommandHandler.values())
 				.filter(h -> message.startsWith(h.prefix))
-				.map(CommandHandler::getHandlerFor)
+				.map(CommandHandler::getHandler)
 				.findFirst()
 				.orElse(null);
 	}
 
-	public TextCommandHandler getHandlerFor() {
+	public TextCommandHandler getHandler() {
 		return handler;
 	}
 }

@@ -1,6 +1,7 @@
 package de.schwarz.diceroller;
 
 import de.schwarz.diceroller.commands.CommandHandlerBroker;
+import de.schwarz.diceroller.commands.buttons.RollButtonHandler;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -24,9 +25,9 @@ public class Main {
 			throw new RuntimeException(e);
 		}
 
-		JDA jda = JDABuilder.createDefault(token)
-				.enableIntents(GatewayIntent.MESSAGE_CONTENT).build();
+		JDA jda = JDABuilder.createDefault(token).enableIntents(GatewayIntent.MESSAGE_CONTENT).build();
 		jda.addEventListener(new CommandHandlerBroker());
+		jda.addEventListener(new RollButtonHandler());
 		jda.awaitReady();
 		System.out.println("Bot is ready!");
 	}

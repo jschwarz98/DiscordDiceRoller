@@ -1,6 +1,7 @@
 package de.schwarz.diceroller.commands.common.messages;
 
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.utils.FileUpload;
 
 public abstract class AbstractMessageData {
@@ -9,6 +10,7 @@ public abstract class AbstractMessageData {
 	private String content;
 	private FileUpload[] files;
 	private MessageEmbed[] embeds;
+	private ActionRow[] actionRows;
 
 	public MessageType getType() {
 		return type;
@@ -40,5 +42,13 @@ public abstract class AbstractMessageData {
 
 	public void setEmbeds(MessageEmbed... embeds) {
 		this.embeds = embeds;
+	}
+
+	public ActionRow[] getActionRows() {
+		return actionRows;
+	}
+
+	public void setActionRows(ActionRow... rows) {
+		this.actionRows = rows;
 	}
 }

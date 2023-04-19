@@ -1,16 +1,23 @@
 package de.schwarz.diceroller.commands.rolling;
 
 import de.schwarz.diceroller.commands.TextCommandHandler;
+import de.schwarz.diceroller.commands.common.RollButton;
 import de.schwarz.diceroller.commands.common.Stats;
 import de.schwarz.diceroller.commands.common.Tuple;
 import de.schwarz.diceroller.commands.common.messages.AbstractMessageData;
 import de.schwarz.diceroller.commands.common.messages.ReplyData;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 public class RollDiceCommand implements TextCommandHandler {
 	private static final String start = "!roll";
@@ -32,16 +39,27 @@ public class RollDiceCommand implements TextCommandHandler {
 			args = rest.split(" ");
 		}
 
+		return performRoll(event.getChannel(), event.getAuthor(), args);
+	}
+
+	public ReplyData performRoll(MessageChannelUnion channel, User user, String... args) {
 		// 1. needed rolls
 		List<Tuple<Integer, Integer>> neededRolls = getRolls(args);
 		// 2. roll them
 		List<Tuple<Integer, List<Integer>>> results = roll(neededRolls);
 		// 3. track them if necessary
-		Stats.track(event.getChannel(), event.getAuthor(), results);
+		Stats.track(channel, user, results);
 		// 4. return result string
 		String resultString = buildResultString(results);
 
-		return new ReplyData(resultString);
+		ReplyData replyData = new ReplyData(resultString);
+		List<Button> buttons = Arrays.stream(RollButton.values())
+				.map(button -> Button.primary(button.id, button.label))
+				.collect(Collectors.toList());
+
+		replyData.setActionRows(ActionRow.of(buttons.subList(0, 3)), ActionRow.of(buttons.subList(3, buttons.size())));
+
+		return replyData;
 	}
 
 	private List<Tuple<Integer, List<Integer>>> roll(List<Tuple<Integer, Integer>> neededDiceRolls) {
@@ -88,9 +106,10 @@ public class RollDiceCommand implements TextCommandHandler {
 		List<Tuple<Integer, Integer>> neededRolls = new ArrayList<>();
 
 		for (String arg : args) {
-			if (!arg.contains("w")) continue;
-			String firstPart = arg.split("w")[0];
-			String secondPart = arg.split("w")[1];
+			String argLowerCase = arg.toLowerCase();
+			if (!argLowerCase.contains("w")) continue;
+			String firstPart = argLowerCase.split("w")[0];
+			String secondPart = argLowerCase.split("w")[1];
 			int amount = 1;
 			int die;
 			try {
@@ -100,7 +119,7 @@ public class RollDiceCommand implements TextCommandHandler {
 				}
 				die = Integer.parseInt(secondPart);
 			} catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
-				System.out.println(arg);
+				System.out.println(argLowerCase);
 				continue;
 			}
 			Tuple<Integer, Integer> t = neededRolls.stream().filter(tuple -> tuple.getOne().equals(die)).findFirst().orElseGet(() -> {
