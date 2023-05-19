@@ -32,7 +32,7 @@ jar {
     duplicatesStrategy = 'exclude'
     manifest {
         attributes(
-                'Main-Class': 'org.example.Main',
+                'Main-Class': 'de.schwarz.diceroller.Main',
                 'Class-Path': configurations.runtimeClasspath.files.collect { "libs/$it.name" }.join(' ')
         )
     }
