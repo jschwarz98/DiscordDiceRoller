@@ -71,7 +71,6 @@ class RollDiceCommandTest {
 		MessageReceivedEvent event = Defaults.createMockMessageEvent("!roll 3w4");
 		AbstractMessageData reply = handler.accept(event);
 		Assertions.assertNotNull(reply);
-		System.out.println(reply.getContent());
 		Assertions.assertTrue(reply.getContent().matches("W4: [1-4], [1-4], [1-4]"));
 	}
 }

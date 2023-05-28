@@ -1,9 +1,6 @@
 package de.schwarz.diceroller.commands.stats;
 
-import de.schwarz.diceroller.commands.common.Channel;
-import de.schwarz.diceroller.commands.common.Stats;
-import de.schwarz.diceroller.commands.common.Tuple;
-import de.schwarz.diceroller.commands.common.User;
+import de.schwarz.diceroller.commands.common.*;
 import de.schwarz.diceroller.commands.common.messages.AbstractMessageData;
 import de.schwarz.diceroller.commands.common.messages.ReplyData;
 import de.schwarz.diceroller.commands.stats.chart.ChartConfig;
@@ -16,10 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,13 +41,17 @@ class GetStatsCommandTest {
 		channel.getUserList().add(user2);
 
 		Stats.trackedChannels.add(channel);
+
+		List<DiceResult> results = new ArrayList<>();
+		results.add(new DiceResult(new Dice(4)));
+		results.get(0).getResultList().getResults().addAll(Arrays.asList(1, 2, 3, 4));
+		results.add(new DiceResult(new Dice(20)));
+		results.get(1).getResultList().getResults().addAll(Arrays.asList(10, 11, 12));
+
 		Stats.track(
 				Defaults.createMockChannel(),
 				Defaults.createMockAuthor(),
-				Arrays.asList(
-						new Tuple<>(4, Arrays.asList(1, 2, 3, 4)),
-						new Tuple<>(20, Arrays.asList(10, 11, 12))
-				)
+				results
 		);
 
 		return channel;
@@ -64,25 +62,19 @@ class GetStatsCommandTest {
 		User[] users = createTestChannel()
 				.getUserList()
 				.toArray(new User[0]);
-		List<Tuple<Integer, List<Tuple<Integer, Integer>>>> tuples = handler.generateDataSets(users);
-		assertEquals(2, tuples.size());
+		List<AggregatedDiceResult> adr = handler.generateDataSets(users);
+		assertEquals(2, adr.size());
 
-		Tuple<Integer, List<Tuple<Integer, Integer>>> w4 = tuples.get(0);
-		assertEquals(4, w4.getTwo().size());
-		List<Tuple<Integer, Integer>> w4Results = w4.getTwo();
-		for (int i = 0; i < w4Results.size(); i++) {
-			Tuple<Integer, Integer> resultPairing = w4Results.get(i);
-			assertEquals(i + 1, resultPairing.getOne());
-			assertEquals(1, resultPairing.getTwo());
+		Map<Integer, Integer> w4 = adr.get(0).getAggregatedDiceResultList().getMap();
+		assertEquals(4, w4.size());
+		for (int i = 0; i < w4.size(); i++) {
+			assertEquals(1, w4.get(i + 1));
 		}
 
-		Tuple<Integer, List<Tuple<Integer, Integer>>> w20 = tuples.get(1);
-		assertEquals(3, w20.getTwo().size());
-		List<Tuple<Integer, Integer>> two = w20.getTwo();
-		for (int i = 0; i < two.size(); i++) {
-			Tuple<Integer, Integer> resultPairing = w4Results.get(i);
-			assertEquals(i + 1, resultPairing.getOne());
-			assertEquals(1, resultPairing.getTwo());
+		Map<Integer, Integer> w20 = adr.get(1).getAggregatedDiceResultList().getMap();
+		assertEquals(3, w20.size());
+		for (int i = 10; i < 10 + w20.size(); i++) {
+			assertEquals(1, w20.get(i));
 		}
 	}
 

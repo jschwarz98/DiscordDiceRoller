@@ -2,9 +2,7 @@ package de.schwarz.diceroller.commands.rolling;
 
 import de.schwarz.diceroller.commands.CommandHandler;
 import de.schwarz.diceroller.commands.TextCommandHandler;
-import de.schwarz.diceroller.commands.common.RollButton;
-import de.schwarz.diceroller.commands.common.Stats;
-import de.schwarz.diceroller.commands.common.Tuple;
+import de.schwarz.diceroller.commands.common.*;
 import de.schwarz.diceroller.commands.common.messages.AbstractMessageData;
 import de.schwarz.diceroller.commands.common.messages.ReplyData;
 import net.dv8tion.jda.api.entities.User;
@@ -21,7 +19,6 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 public class RollDiceCommand implements TextCommandHandler {
-	private static final String start = "!roll";
 	private static final Random r = new Random();
 
 	@Override
@@ -43,7 +40,7 @@ public class RollDiceCommand implements TextCommandHandler {
 		// 1. needed rolls
 		List<Tuple<Integer, Integer>> neededRolls = getRolls(args);
 		// 2. roll them
-		List<Tuple<Integer, List<Integer>>> results = roll(neededRolls);
+		List<DiceResult> results = roll(neededRolls);
 		// 3. track them if necessary
 		Stats.track(channel, user, results);
 		// 4. return result string
@@ -54,21 +51,22 @@ public class RollDiceCommand implements TextCommandHandler {
 				.map(button -> Button.primary(button.id, button.label))
 				.collect(Collectors.toList());
 
-		replyData.setActionRows(ActionRow.of(buttons.subList(0, 3)), ActionRow.of(buttons.subList(3, buttons.size())));
+		replyData.setActionRows(ActionRow.of(buttons.subList(0, 3)), ActionRow.of(buttons.subList(3, buttons.size())), StatButtons.getStatButtons(Stats.channelIsTracked(channel.getIdLong())));
+
 
 		return replyData;
 	}
 
-	private List<Tuple<Integer, List<Integer>>> roll(List<Tuple<Integer, Integer>> neededDiceRolls) {
-		List<Tuple<Integer, List<Integer>>> result = new ArrayList<>();
+	private List<DiceResult> roll(List<Tuple<Integer, Integer>> neededDiceRolls) {
+		List<DiceResult> result = new ArrayList<>();
 
 		for (Tuple<Integer, Integer> roll : neededDiceRolls) {
 			Integer die = roll.getOne();
 			Integer amountOfDice = roll.getTwo();
-			Tuple<Integer, List<Integer>> res = new Tuple<>(die, new ArrayList<>());
+			DiceResult res = new DiceResult(new Dice(die));
 
 			for (int i = 0; i < amountOfDice; i++) {
-				res.getTwo().add(r.nextInt(die) + 1);
+				res.getResultList().getResults().add(r.nextInt(die) + 1);
 			}
 
 			result.add(res);
@@ -78,20 +76,19 @@ public class RollDiceCommand implements TextCommandHandler {
 	}
 
 	@NotNull
-	private String buildResultString(List<Tuple<Integer, List<Integer>>> rollResults) {
+	private String buildResultString(List<DiceResult> rollResults) {
 		StringBuilder resultString = new StringBuilder();
 
 		rollResults.forEach(roll -> {
 			resultString.append("W")
-					.append(roll.getOne())
+					.append(roll.getDie().die())
 					.append(": ");
 
-			resultString.append(roll.getTwo().get(0));
-			for (int i = 1; i < roll.getTwo().size(); i++) {
+			resultString.append(roll.getResultList().getResults().get(0));
+			for (int i = 1; i < roll.getResultList().getResults().size(); i++) {
 				resultString
 						.append(", ")
-						.append(roll.getTwo().get(i));
-
+						.append(roll.getResultList().getResults().get(i));
 			}
 			resultString.append(System.lineSeparator());
 		});

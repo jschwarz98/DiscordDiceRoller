@@ -1,10 +1,7 @@
 package de.schwarz.diceroller.commands.stats;
 
 import de.schwarz.diceroller.commands.TextCommandHandler;
-import de.schwarz.diceroller.commands.common.Channel;
-import de.schwarz.diceroller.commands.common.Stats;
-import de.schwarz.diceroller.commands.common.Tuple;
-import de.schwarz.diceroller.commands.common.User;
+import de.schwarz.diceroller.commands.common.*;
 import de.schwarz.diceroller.commands.common.messages.AbstractMessageData;
 import de.schwarz.diceroller.commands.common.messages.ReplyData;
 import de.schwarz.diceroller.commands.stats.chart.ChartConfig;
@@ -29,7 +26,7 @@ public class GetStatsCommand implements TextCommandHandler {
 		if (chartConfig.isEmpty())
 			return new ReplyData("No information for this user in this channel!");
 
-		List<Tuple<Integer, List<Tuple<Integer, Integer>>>> datasets = generateDataSets(chartConfig.get().users());
+		List<AggregatedDiceResult> datasets = generateDataSets(chartConfig.get().users());
 
 		ReplyStrategy strategy = getReplyStrategy(event.getMessage().getContentDisplay());
 		return strategy.accept(event, chartConfig.get().title(), datasets);
@@ -55,44 +52,37 @@ public class GetStatsCommand implements TextCommandHandler {
 		}
 	}
 
-	protected List<Tuple<Integer, List<Tuple<Integer, Integer>>>> generateDataSets(User... users) {
+	protected List<AggregatedDiceResult> generateDataSets(User... users) {
 		// Dataset erstellen für jeden Die den wir finden! also für jeden w20 oder w8 etc...
 		HashMap<Integer, DataSet> dataSetMap = new HashMap<>();
 
 		// alle ergebnisse zusammengetragen
-		for (User user : users) {
-			for (Map.Entry<Integer, List<Integer>> entry : user.getRolls().entrySet()) {
-				Integer die = entry.getKey();
-				List<Integer> results = entry.getValue();
-				DataSet dataSet = dataSetMap.computeIfAbsent(die, (d) -> {
-					DataSet set = new DataSet();
-					set.setDie(d);
-					set.setCountingMap(new HashMap<>());
-					set.setValues(new ArrayList<>());
-					return set;
-				});
 
-				dataSet.getValues().addAll(results);
-			}
+		HashMap<Dice, DiceResultList> map = new HashMap<>();
+
+		for (User user : users) {
+
+			user.getDiceResults().forEach(result -> {
+				Dice die = result.getDie();
+				List<Integer> results = result.getResultList().getResults();
+				DiceResultList diceResultList = map.computeIfAbsent(die, (d) -> new DiceResultList());
+				diceResultList.getResults().addAll(results);
+			});
+
 		}
 
-		// gezählt welches ergebnis wie oft vorkommt
-		dataSetMap.values()
-				.forEach(dataset -> dataset.getValues()
-						.forEach(value -> dataset.getCountingMap().compute(value, (key, currentCount) -> currentCount == null ? 1 : currentCount + 1)));
+		Map<Dice, Map<Integer, Integer>> resultCountingMap = new HashMap<>();
 
-		dataSetMap.values()
-				.forEach(dataset -> {
-					dataset.getCountingMap().forEach((key, value) -> dataset.getResultList().add(new Tuple<>(key, value)));
-					dataset.getResultList().sort(Comparator.comparing(Tuple::getOne));
-				});
+		map.forEach((dice, valueList) ->
+				valueList
+						.getResults()
+						.forEach(value -> resultCountingMap
+								.computeIfAbsent(dice, d -> new HashMap<>())
+								.compute(value, (key, currentCount) -> currentCount == null ? 1 : currentCount + 1)));
 
-		return dataSetMap
-				.entrySet()
-				.stream()
-				.map(entry -> new Tuple<>(entry.getKey(), entry.getValue().getResultList()))
-				.sorted(Comparator.comparing(Tuple::getOne))
+		return resultCountingMap.entrySet().stream()
+				.map(es -> new AggregatedDiceResult(es.getKey(), new AggregatedDiceResultList(es.getValue())))
+				.sorted(Comparator.comparing(AggregatedDiceResult::getDie))
 				.collect(Collectors.toList());
 	}
-
 }

@@ -4,14 +4,17 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class Stats {
 
 	public static List<Channel> trackedChannels = new ArrayList<>();
 
-	public static void track(MessageChannelUnion channel, User author, List<Tuple<Integer, List<Integer>>> results) {
+	public static boolean channelIsTracked(long id) {
+		return trackedChannels.stream().anyMatch(c -> c.getChannelId() == id);
+	}
+
+	public static void track(MessageChannelUnion channel, User author, List<DiceResult> results) {
 
 		Channel c = trackedChannels.stream().filter(ch -> ch.getChannelId() == channel.getIdLong()).findFirst().orElse(null);
 		if (c == null) return;
@@ -22,13 +25,21 @@ public class Stats {
 			c.getUserList().add(user);
 		}
 
-		HashMap<Integer, List<Integer>> userRollMap = user.getRolls();
-		for (Tuple<Integer, List<Integer>> result : results) {
-			userRollMap.compute(result.getOne(), (key, val) -> {
-				if (val == null) val = new ArrayList<>();
-				val.addAll(result.getTwo());
-				return val;
-			});
+		List<DiceResult> userDiceResults = user.getDiceResults();
+		for (DiceResult result : results) {
+			if (userDiceResults
+					.stream()
+					.anyMatch(dr -> dr.getDie().equals(result.getDie()))) {
+
+				DiceResult userDiceResult = userDiceResults
+						.stream()
+						.filter(udr -> udr.getDie().equals(result.getDie()))
+						.findFirst()
+						.orElseThrow();
+				userDiceResult.getResultList().getResults().addAll(result.getResultList().getResults());
+			} else {
+				userDiceResults.add(result);
+			}
 		}
 	}
 }
