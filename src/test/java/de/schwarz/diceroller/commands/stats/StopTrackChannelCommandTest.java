@@ -12,7 +12,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class StopTrackChannelCommandTest {
 
@@ -32,7 +33,10 @@ class StopTrackChannelCommandTest {
 	public void stopTracking_emptyChannelList() {
 		MessageReceivedEvent mockMessageEvent = Defaults.createMockMessageEvent("!stop", 123L);
 		AbstractMessageData reply1 = handler.accept(mockMessageEvent);
-		assertNull(reply1);
+		assertNotNull(reply1);
+		assertEquals("This channel is not being tracked! Start tracking it by pressing the button below!", reply1.getContent());
+		assertEquals(1, reply1.getActionRows().length);
+		assertEquals(1, reply1.getActionRows()[0].getComponents().size());
 	}
 
 	@Test
@@ -55,7 +59,10 @@ class StopTrackChannelCommandTest {
 
 		MessageReceivedEvent mockMessageEvent = Defaults.createMockMessageEvent("!stop", 123L);
 		AbstractMessageData reply1 = handler.accept(mockMessageEvent);
-		assertNull(reply1);
+		assertNotNull(reply1);
+		assertEquals("This channel is not being tracked! Start tracking it by pressing the button below!", reply1.getContent());
+		assertEquals(1, reply1.getActionRows().length);
+		assertEquals(1, reply1.getActionRows()[0].getComponents().size());
 		assertEquals(3, Stats.trackedChannels.size());
 	}
 
