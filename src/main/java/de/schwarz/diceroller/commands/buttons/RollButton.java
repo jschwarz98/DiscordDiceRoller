@@ -1,4 +1,4 @@
-package de.schwarz.diceroller.commands.common;
+package de.schwarz.diceroller.commands.buttons;
 
 public enum RollButton {
 

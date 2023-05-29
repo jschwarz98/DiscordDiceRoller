@@ -1,6 +1,7 @@
 package de.schwarz.diceroller.commands.stats;
 
 import de.schwarz.diceroller.commands.TextCommandHandler;
+import de.schwarz.diceroller.commands.buttons.StatButtons;
 import de.schwarz.diceroller.commands.common.Stats;
 import de.schwarz.diceroller.commands.common.messages.AbstractMessageData;
 import de.schwarz.diceroller.commands.common.messages.ReplyData;
@@ -10,12 +11,18 @@ public class StopTrackChannelCommand implements TextCommandHandler {
 
 	@Override
 	public AbstractMessageData accept(MessageReceivedEvent event) {
-		long cid = event.getChannel().getIdLong();
+		return stopTracking(event.getChannel().getIdLong());
+	}
 
-		boolean removedAny = Stats.trackedChannels.removeIf(channel -> channel.getChannelId() == cid);
-		if (removedAny) {
-			return new ReplyData("This channel is no longer being tracked!");
+	public AbstractMessageData stopTracking(long channelId) {
+		ReplyData data = new ReplyData();
+		data.setActionRows(StatButtons.getStatButtons(false));
+
+		if (Stats.removeChannel(channelId)) {
+			data.setContent("This channel is no longer being tracked!");
+			return data;
 		}
-		return null;
+		data.setContent("This channel is not being tracked! Start tracking it by pressing the button below!");
+		return data;
 	}
 }

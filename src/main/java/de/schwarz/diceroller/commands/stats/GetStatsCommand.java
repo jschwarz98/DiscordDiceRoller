@@ -1,14 +1,15 @@
 package de.schwarz.diceroller.commands.stats;
 
 import de.schwarz.diceroller.commands.TextCommandHandler;
+import de.schwarz.diceroller.commands.buttons.RollButtons;
 import de.schwarz.diceroller.commands.common.*;
 import de.schwarz.diceroller.commands.common.messages.AbstractMessageData;
 import de.schwarz.diceroller.commands.common.messages.ReplyData;
 import de.schwarz.diceroller.commands.stats.chart.ChartConfig;
 import de.schwarz.diceroller.commands.stats.chart.DataSet;
-import de.schwarz.diceroller.commands.stats.replyStrategy.GraphVisualization;
-import de.schwarz.diceroller.commands.stats.replyStrategy.ReplyStrategy;
-import de.schwarz.diceroller.commands.stats.replyStrategy.TextTable;
+import de.schwarz.diceroller.commands.stats.statReplyStrategy.GraphVisualization;
+import de.schwarz.diceroller.commands.stats.statReplyStrategy.StatReplyStrategy;
+import de.schwarz.diceroller.commands.stats.statReplyStrategy.TextTable;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.util.*;
@@ -16,23 +17,30 @@ import java.util.stream.Collectors;
 
 public class GetStatsCommand implements TextCommandHandler {
 
+	public static final String USER_STAT_FLAG = " --user";
+
 	@Override
 	public AbstractMessageData accept(MessageReceivedEvent event) {
-		long channelId = event.getChannel().getIdLong();
-		Channel channel = Stats.trackedChannels.stream().filter(c -> c.getChannelId() == channelId).findFirst().orElse(null);
-		if (channel == null) return null;
-
-		Optional<ChartConfig> chartConfig = createChartConfig(event.getMessage().getContentDisplay(), event.getAuthor(), channel);
-		if (chartConfig.isEmpty())
-			return new ReplyData("No information for this user in this channel!");
-
-		List<AggregatedDiceResult> datasets = generateDataSets(chartConfig.get().users());
-
-		ReplyStrategy strategy = getReplyStrategy(event.getMessage().getContentDisplay());
-		return strategy.accept(event, chartConfig.get().title(), datasets);
+		return createStatsReply(event.getChannel().getIdLong(), event.getAuthor(), event.getMessage().getContentDisplay());
 	}
 
-	protected ReplyStrategy getReplyStrategy(String contentDisplay) {
+	public AbstractMessageData createStatsReply(long channelId, net.dv8tion.jda.api.entities.User user, String msg) {
+		de.schwarz.diceroller.commands.common.Channel channel = Stats.trackedChannels.stream().filter(c -> c.getChannelId() == channelId).findFirst().orElse(null);
+		if (channel == null) return null;
+
+		Optional<ChartConfig> chartConfig = createChartConfig(msg, user, channel);
+		if (chartConfig.isEmpty()) {
+			ReplyData data = new ReplyData("No information for user " + user.getName() + " in *this channel* yet!");
+			data.setActionRows(RollButtons.getRollButtons_4_6_8(), RollButtons.getRollButtons_10_12_20());
+			return data;
+		}
+		List<AggregatedDiceResult> datasets = generateDataSets(chartConfig.get().users());
+
+		StatReplyStrategy strategy = getReplyStrategy(msg);
+		return strategy.accept(chartConfig.get().title(), datasets);
+	}
+
+	protected StatReplyStrategy getReplyStrategy(String contentDisplay) {
 		if (contentDisplay.contains(" --table")) {
 			return new TextTable();
 		}
@@ -41,7 +49,7 @@ public class GetStatsCommand implements TextCommandHandler {
 
 	protected Optional<ChartConfig> createChartConfig(String msg, net.dv8tion.jda.api.entities.User author, Channel channel) {
 		final String baseTitle = "Dice Roll Results Visualized";
-		if (msg.contains(" --user")) {
+		if (msg.contains(USER_STAT_FLAG)) {
 			User user = channel.getUserList().stream().filter(trackedUser -> trackedUser.getUserId() == author.getIdLong()).findFirst().orElse(null);
 			if (user == null) {
 				return Optional.empty();

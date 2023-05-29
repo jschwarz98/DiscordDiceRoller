@@ -1,5 +1,7 @@
-package de.schwarz.diceroller.commands.stats.replyStrategy;
+package de.schwarz.diceroller.commands.stats.statReplyStrategy;
 
+import de.schwarz.diceroller.commands.buttons.RollButtons;
+import de.schwarz.diceroller.commands.buttons.StatButtons;
 import de.schwarz.diceroller.commands.common.AggregatedDiceResult;
 import de.schwarz.diceroller.commands.common.messages.AbstractMessageData;
 import de.schwarz.diceroller.commands.common.messages.ReplyData;
@@ -12,7 +14,6 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.image.WritableImage;
 import javafx.util.StringConverter;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,12 +27,12 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-public class GraphVisualization implements ReplyStrategy {
+public class GraphVisualization implements StatReplyStrategy {
 
 	private static final JFXInitialization JFX = JFXInitialization.get();
 
 	@Override
-	public AbstractMessageData accept(MessageReceivedEvent event, String title, List<AggregatedDiceResult> datasets) {
+	public AbstractMessageData accept(String title, List<AggregatedDiceResult> datasets) {
 		CompletableFuture<FileUpload> futureImage = new CompletableFuture<>();
 		Platform.runLater(() -> {
 			final BarChart<String, Number> barChart = createBarChart(title);
@@ -51,6 +52,9 @@ public class GraphVisualization implements ReplyStrategy {
 			FileUpload fileUpload = futureImage.get();
 			reply = new ReplyData("Here you go~");
 			reply.setFiles(fileUpload);
+			reply.setActionRows(RollButtons.getRollButtons_4_6_8(),
+					RollButtons.getRollButtons_10_12_20(),
+					StatButtons.getStatButtons(true));
 		} catch (ExecutionException e) {
 			reply = new ReplyData(e.getMessage());
 		} catch (InterruptedException | CancellationException ignored) {

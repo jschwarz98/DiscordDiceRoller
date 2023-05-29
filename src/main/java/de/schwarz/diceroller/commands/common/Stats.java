@@ -14,6 +14,18 @@ public class Stats {
 		return trackedChannels.stream().anyMatch(c -> c.getChannelId() == id);
 	}
 
+	public static boolean removeChannel(long channelId) {
+		return Stats.trackedChannels.removeIf(channel -> channel.getChannelId() == channelId);
+	}
+
+	public static boolean addChannel(long channelId) {
+		if (channelIsTracked(channelId)) {
+			return false;
+		}
+		trackedChannels.add(new Channel(channelId));
+		return true;
+	}
+
 	public static void track(MessageChannelUnion channel, User author, List<DiceResult> results) {
 
 		Channel c = trackedChannels.stream().filter(ch -> ch.getChannelId() == channel.getIdLong()).findFirst().orElse(null);

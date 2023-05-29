@@ -1,7 +1,8 @@
 package de.schwarz.diceroller.commands.stats;
 
 import de.schwarz.diceroller.commands.TextCommandHandler;
-import de.schwarz.diceroller.commands.common.Channel;
+import de.schwarz.diceroller.commands.buttons.RollButtons;
+import de.schwarz.diceroller.commands.buttons.StatButtons;
 import de.schwarz.diceroller.commands.common.Stats;
 import de.schwarz.diceroller.commands.common.messages.AbstractMessageData;
 import de.schwarz.diceroller.commands.common.messages.ReplyData;
@@ -11,14 +12,24 @@ public class TrackChannelCommand implements TextCommandHandler {
 
 	@Override
 	public AbstractMessageData accept(MessageReceivedEvent event) {
-		long cid = event.getChannel().getIdLong();
-		String usageInfo = "To see the collected information use the following commands: !stats; !stats --user";
+		return startTracking(event.getChannel().getIdLong());
+	}
 
-		if (Stats.trackedChannels.stream().anyMatch(c -> c.getChannelId() == cid)) {
-			return new ReplyData("This channel is already being tracked! " + usageInfo);
+	public AbstractMessageData startTracking(long channelId) {
+		String usageInfo = "To see the collected information use the following commands: !stats; !stats --user";
+		ReplyData replyData = new ReplyData();
+
+		replyData.setActionRows(RollButtons.getRollButtons_4_6_8(),
+				RollButtons.getRollButtons_10_12_20(),
+				StatButtons.getStatButtons(true));
+
+		if (!Stats.addChannel(channelId)) {
+			replyData.setContent("This channel is already being tracked! " + usageInfo);
+			return replyData;
 		}
 
-		Stats.trackedChannels.add(new Channel(cid));
-		return new ReplyData("Tracking this channel from now on. " + usageInfo);
+		replyData.setContent("Tracking this channel from now on. " + usageInfo);
+		return replyData;
 	}
+
 }

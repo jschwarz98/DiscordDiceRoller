@@ -4,9 +4,9 @@ import de.schwarz.diceroller.commands.common.*;
 import de.schwarz.diceroller.commands.common.messages.AbstractMessageData;
 import de.schwarz.diceroller.commands.common.messages.ReplyData;
 import de.schwarz.diceroller.commands.stats.chart.ChartConfig;
-import de.schwarz.diceroller.commands.stats.replyStrategy.GraphVisualization;
-import de.schwarz.diceroller.commands.stats.replyStrategy.ReplyStrategy;
-import de.schwarz.diceroller.commands.stats.replyStrategy.TextTable;
+import de.schwarz.diceroller.commands.stats.statReplyStrategy.GraphVisualization;
+import de.schwarz.diceroller.commands.stats.statReplyStrategy.StatReplyStrategy;
+import de.schwarz.diceroller.commands.stats.statReplyStrategy.TextTable;
 import de.schwarz.diceroller.common.Defaults;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -107,7 +107,7 @@ class GetStatsCommandTest {
 
 	@Test
 	void getReplyStrategy() {
-		ReplyStrategy strategy = handler.getReplyStrategy("!stats --user --table");
+		StatReplyStrategy strategy = handler.getReplyStrategy("!stats --user --table");
 		assertSame(strategy.getClass(), TextTable.class);
 
 		strategy = handler.getReplyStrategy("!stats --table");

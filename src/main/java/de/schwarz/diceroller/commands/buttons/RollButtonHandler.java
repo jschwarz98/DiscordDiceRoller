@@ -1,6 +1,5 @@
 package de.schwarz.diceroller.commands.buttons;
 
-import de.schwarz.diceroller.commands.common.RollButton;
 import de.schwarz.diceroller.commands.common.messages.ReplyData;
 import de.schwarz.diceroller.commands.rolling.RollDiceCommand;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -26,7 +25,15 @@ public class RollButtonHandler extends ListenerAdapter {
 		String userName = event.getMember() != null ? event.getMember().getEffectiveName() : event.getUser().getName();
 
 		ReplyCallbackAction action = event.reply("");
-		action.setContent("For **" + userName + "**" + System.lineSeparator() + System.lineSeparator() + replyData.getContent() + System.lineSeparator() + System.lineSeparator() + System.lineSeparator() + "Try these next:");
+		action.setContent(
+				"For **" + userName + "**" + System.lineSeparator()
+						+ System.lineSeparator()
+						+ replyData.getContent()
+						+ System.lineSeparator()
+						+ System.lineSeparator()
+						+ "Lets hope the Dice-Gods are on your side!"
+		);
+
 		if (replyData.getEmbeds() != null && replyData.getEmbeds().length < 10)
 			action.addEmbeds(replyData.getEmbeds());
 		if (replyData.getFiles() != null)
